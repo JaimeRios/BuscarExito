@@ -14,13 +14,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/darker_gray"
-        android:id="@+id/destino">
+        android:id="@+id/vehiculo">
     </Spinner>
     <Spinner
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/darker_gray"
-        android:id="@+id/vehiculo">
+        android:id="@+id/destino">
     </Spinner>
     <Button
         android:layout_width="match_parent"

@@ -117,7 +117,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         latitud = object.getDouble("latitud");
                         longitud = object.getDouble("longitud");
                         titulo = object.getString("titulo");
-                        spinnerDestinoArray.add(titulo);
+                        //spinnerDestinoArray.add(titulo);
                         mMap.addMarker(new MarkerOptions().position(new LatLng(latitud, longitud)).title(titulo));
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -151,6 +151,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         spinnerVehiculoArray.add("Carro");
         spinnerVehiculoArray.add("Bicicleta");
         spinnerVehiculoArray.add("Caminando");
+
+        spinnerDestinoArray.add("Exito Poblado");
+        spinnerDestinoArray.add("Exito Molinos");
+        spinnerDestinoArray.add("Exito San Antionio");
+        spinnerDestinoArray.add("Exito Junin");
+        spinnerDestinoArray.add("Exito San Diego");
+        spinnerDestinoArray.add("Exito La 70");
+        spinnerDestinoArray.add("Exito Unicentro");
+        spinnerDestinoArray.add("Exito Puerta del Norte");
+        spinnerDestinoArray.add("Exito Aranjuez");
+        spinnerDestinoArray.add("Exito Bello Centro");
 
         ArrayAdapter<String> destinoAdapter = new ArrayAdapter<String>(
                 getApplicationContext(), android.R.layout.simple_spinner_item, spinnerDestinoArray);

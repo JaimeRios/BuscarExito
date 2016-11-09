@@ -2,11 +2,18 @@ package com.android.jshuin.buscarexito;
 
 import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -20,6 +27,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +47,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     JSONArray puntosArray;
     List<String> spinnerDestinoArray;
     List<String> spinnerVehiculoArray;
+    Button trazarBoton;
 
     private GoogleMap mMap;
 
@@ -49,21 +59,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
-        destinoSeleccionable = (Spinner)findViewById(R.id.destino);
-        vehiculoSeleccionable = (Spinner)findViewById(R.id.vehiculo);
+        destinoSeleccionable = (Spinner) findViewById(R.id.destino);
+        vehiculoSeleccionable = (Spinner) findViewById(R.id.vehiculo);
+        trazarBoton = (Button) findViewById(R.id.btnruta);
         destinoSeleccionable.setPopupBackgroundResource(R.drawable.spinner);
         vehiculoSeleccionable.setPopupBackgroundResource(R.drawable.spinner);
 
         mapFragment.getMapAsync(this);
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         cargarpuntos();
+        manejarRutas();
     }
 
     private void cargarpuntos() {
-        //progressDialog = new ProgressDialog(getApplicationContext());
-        //progressDialog.setMessage("Cargando puntos en el mapa.");
-        //progressDialog.show();
-
 
         spinnerDestinoArray =  new ArrayList<String>();
         spinnerVehiculoArray =  new ArrayList<String>();
@@ -161,6 +169,92 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return poly;
     }
 
+    private void manejarRutas() {
+
+        trazarBoton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String destinoString = "";
+                String vehiculoString = "Bad Loading..";
+
+                if (destinoSeleccionable.getSelectedItem() != null && vehiculoSeleccionable.getSelectedItem() != null) {
+                    destinoString = destinoSeleccionable.getSelectedItem().toString();
+                    vehiculoString = vehiculoSeleccionable.getSelectedItem().toString();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Selecciona todos los campos", Toast.LENGTH_SHORT).show();
+                }
+
+                double longitudDestino = 0;
+                double latitudDestino = 0;
+
+                if (puntosArray != null) {
+
+                    for (int i = 0; i < puntosArray.length(); i++) {
+                        try {
+                            JSONObject object = puntosArray.getJSONObject(i);
+                            if (destinoString.equals(object.getString("titulo"))) {
+                                longitudDestino = object.getDouble("longitud");
+                                latitudDestino = object.getDouble("latitud");
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+
+                    Toast.makeText(getApplicationContext(), "Error al cargar datos del server", Toast.LENGTH_SHORT).show();
+                }
+
+                // Enabling MyLocation Layer of Google Map
+                if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+
+                mMap.setMyLocationEnabled(true);
+                LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+                Criteria criteria = new Criteria();
+                String provider = locationManager.getBestProvider(criteria, true);
+                Location location = locationManager.getLastKnownLocation(provider);
+
+                double longitudOrigen = 0;
+                double latitudOrigen = 0;
+
+                if (location != null) {
+                    latitudOrigen = location.getLatitude();
+                    longitudOrigen = location.getLongitude();
+                    //Toast.makeText(getApplicationContext(), "Longitud Actual: "+longitudOrigen+" Latitud Actual: "+latitudOrigen, Toast.LENGTH_SHORT).show();
+
+                }else {
+                    Toast.makeText(getApplicationContext(), "No se puede encontrar la ubicación", Toast.LENGTH_SHORT).show();
+                }
+
+                trazarRutaHacia(longitudDestino,latitudDestino,longitudOrigen, latitudOrigen, vehiculoString);
+            }
+        });
+
+    }
+
+    private void trazarRutaHacia(double longitudDestino, double latitudDestino, double longitudOrigen, double latitudOrigen, String medio) {
+
+        Toast.makeText(getApplicationContext(), longitudDestino+"\n"+latitudDestino+"\n"+longitudOrigen+"\n"+latitudOrigen+"\n"+medio, Toast.LENGTH_SHORT).show();
+
+        /*
+        Polyline line = mMap.addPolyline(new PolylineOptions()
+                .add(new LatLng(latitudOrigen, longitudOrigen), new LatLng(40.7, -74.0))
+                .width(5)
+                .color(Color.GREEN)); */
+
+
+    }
 
 
 

@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -23,12 +25,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String URL = "http://192.168.1.5:8888/Buscameexito/consulta.php";
     ProgressDialog progressDialog;
     RequestQueue requestQueue;
     double latitud, longitud;
     String titulo;
+    Spinner destinoSeleccionable, vehiculoSeleccionable;
+    JSONArray puntosArray;
+    List<String> spinnerDestinoArray;
+    List<String> spinnerVehiculoArray;
 
     private GoogleMap mMap;
 
@@ -39,6 +48,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+
+        destinoSeleccionable = (Spinner)findViewById(R.id.destino);
+        vehiculoSeleccionable = (Spinner)findViewById(R.id.destino);
+        destinoSeleccionable.setPopupBackgroundResource(R.drawable.spinner);
+        vehiculoSeleccionable.setPopupBackgroundResource(R.drawable.spinner);
+
         mapFragment.getMapAsync(this);
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         cargarpuntos();
@@ -49,20 +64,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //progressDialog.setMessage("Cargando puntos en el mapa.");
         //progressDialog.show();
 
+        spinnerDestinoArray =  new ArrayList<String>();
+        spinnerVehiculoArray =  new ArrayList<String>();
+
         final JsonArrayRequest request = new JsonArrayRequest(URL, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+
+                puntosArray = response;
                 for (int i = 0; i < response.length(); i++) {
                     try {
                         JSONObject object = response.getJSONObject(i);
                         latitud = object.getDouble("latitud");
                         longitud = object.getDouble("longitud");
                         titulo = object.getString("titulo");
+                        spinnerDestinoArray.add(titulo);
                         mMap.addMarker(new MarkerOptions().position(new LatLng(latitud, longitud)).title(titulo));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
+
                 if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
@@ -85,9 +107,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+
+        // Load Spinners
+        spinnerVehiculoArray.add("Carro");
+        spinnerVehiculoArray.add("Bicicleta");
+        spinnerVehiculoArray.add("Caminando");
+
+        ArrayAdapter<String> destinoAdapter = new ArrayAdapter<String>(
+                getApplicationContext(), android.R.layout.simple_spinner_item, spinnerDestinoArray);
+        ArrayAdapter<String> vehiculoAdapter = new ArrayAdapter<String>(
+                getApplicationContext(), android.R.layout.simple_spinner_item, spinnerVehiculoArray);
+        destinoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        vehiculoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        destinoSeleccionable.setAdapter(destinoAdapter);
+        vehiculoSeleccionable.setAdapter(vehiculoAdapter);
+
+
         requestQueue.add(request);
 
     }
+
+
 
 
     /**
